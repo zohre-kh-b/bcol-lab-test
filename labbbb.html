@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bcool Lab - Computational Neuroscience</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Mysterious (Cinzel) + Cute/Clean (Quicksand) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ==================== COLOR PALETTE & VARIABLES ==================== */
+        :root {
+            --bg-navy: #050b14;
+            --navy-card: rgba(13, 23, 42, 0.75);
+            --navy-card-border: rgba(167, 139, 250, 0.25);
+            
+            --lavender-main: #c084fc;
+            --lavender-light: #e9d5ff;
+            --lavender-glow: rgba(192, 132, 252, 0.4);
+            
+            --olive-accent: #84cc16;
+            --olive-dark: #65a30d;
+            --olive-glow: rgba(132, 204, 22, 0.3);
+
+            --cool-cyan: #38bdf8;
+            --text-main: #f1f5f9;
+            --text-muted: #cbd5e1;
+            
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            color: var(--text-main);
+            background-color: var(--bg-navy);
+            line-height: 1.6;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Canvas Neural Network Background */
+        #neural-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at center, #0a1329 0%, #030712 100%);
+        }
+
+        h1, h2, h3, .logo {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 1px;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.3rem;
+            color: var(--lavender-light);
+            margin-bottom: 10px;
+            text-shadow: 0 0 12px var(--lavender-glow);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            max-width: 650px;
+            margin: 0 auto 40px auto;
+            font-size: 1.05rem;
+        }
+
+        /* ==================== MULTI-PAGE SPA ROUTING ==================== */
+        .page {
+            display: none; /* Hide all pages by default */
+            padding: 60px 0;
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+
+        .page.active {
+            display: block; /* Only show active page */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== BUTTONS ==================== */
+        .btn {
+            display: inline-block;
+            padding: 12px 26px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-family: 'Quicksand', sans-serif;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--lavender-main), #9333ea);
+            color: white;
+            box-shadow: 0 0 15px var(--lavender-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px var(--lavender-glow);
+        }
+
+        .btn-outline {
+            border: 2px solid var(--olive-accent);
+            color: var(--olive-accent);
+            background: rgba(132, 204, 22, 0.05);
+            box-shadow: 0 0 10px var(--olive-glow);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--olive-accent);
+            color: var(--bg-navy);
+            box-shadow: 0 0 20px var(--olive-glow);
+        }
+
+        /* ==================== FROSTED GLASS CARDS ==================== */
+        .glass-card {
+            background: var(--navy-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--navy-card-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* ==================== NAVBAR ==================== */
+        .navbar {
+            background: rgba(5, 11, 20, 0.85);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--navy-card-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 75px;
+        }
+
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--lavender-light);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            text-shadow: 0 0 10px var(--lavender-glow);
+        }
+
+        .logo i {
+            color: var(--olive-accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: var(--transition);
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 12px;
+        }
+
+        .nav-links a:hover, .nav-links a.active-link {
+            color: var(--cool-cyan);
+            background: rgba(56, 189, 248, 0.1);
+            text-shadow: 0 0 8px var(--cool-cyan);
+        }
+
+        /* ==================== HOME PAGE ==================== */
+        .hero {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.2rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(233, 213, 255, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 750px;
+            margin: 0 auto 35px auto;
+        }
+
+        /* ==================== RESEARCH PAGE ==================== */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            padding: 35px;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--lavender-main);
+            box-shadow: 0 10px 30px var(--lavender-glow);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            color: var(--olive-accent);
+            margin-bottom: 20px;
+            text-shadow: 0 0 12px var(--olive-glow);
+        }
+
+        .card h3 {
+            font-size: 1.35rem;
+            margin-bottom: 12px;
+            color: var(--lavender-light);
+        }
+
+        /* ==================== MEMBERS PAGE ==================== */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        .team-card {
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .team-header {
+            padding: 25px;
+            background: rgba(192, 132, 252, 0.05);
+            border-bottom: 1px solid var(--navy-card-border);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .team-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--olive-accent), var(--olive-dark));
+            color: var(--bg-navy);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 0 15px var(--olive-glow);
+        }
+
+        .team-info h3 {
+            color: var(--lavender-light);
+            font-size: 1.25rem;
+        }
+
+        .team-info .role {
+            font-size: 0.9rem;
+            color: var(--cool-cyan);
+            font-weight: 600;
+        }
+
+        .team-info .tenure {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .team-body {
+            padding: 25px;
+        }
+
+        .team-body h4 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--olive-accent);
+            margin-bottom: 12px;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            background-color: rgba(56, 189, 248, 0.1);
+            color: var(--cool-cyan);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* ==================== JOURNAL PAGE ==================== */
+        .journal-container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .journal-post {
+            padding: 30px;
+            transition: var(--transition);
+        }
+
+        .journal-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+            color: var(--olive-accent);
+            margin-bottom: 10px;
+        }
+
+        .journal-post h3 {
+            color: var(--lavender-light);
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+        }
+
+        /* ==================== CONTACT & SOCIAL MEDIA PAGE ==================== */
+        .contact-card {
+            padding: 40px;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .social-grid {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+            margin-top: 35px;
+        }
+
+        .social-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 110px;
+            height: 110px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--navy-card-border);
+            color: var(--text-main);
+            transition: var(--transition);
+        }
+
+        .social-link i {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .social-link.youtube:hover {
+            color: #ff0000;
+            border-color: #ff0000;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .social-link.linkedin:hover {
+            color: #0a66c2;
+            border-color: #0a66c2;
+            box-shadow: 0 0 20px rgba(10, 102, 194, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .social-link.instagram:hover {
+            color: #e1306c;
+            border-color: #e1306c;
+            box-shadow: 0 0 20px rgba(225, 48, 108, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .social-link.telegram:hover {
+            color: #229ed9;
+            border-color: #229ed9;
+            box-shadow: 0 0 20px rgba(34, 158, 217, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .social-link.email:hover {
+            color: var(--olive-accent);
+            border-color: var(--olive-accent);
+            box-shadow: 0 0 20px var(--olive-glow);
+            transform: translateY(-5px);
+        }
+
+        /* ==================== FORMS & MODALS ==================== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--lavender-light);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(5, 11, 20, 0.6);
+            border: 1px solid var(--navy-card-border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--lavender-main);
+            box-shadow: 0 0 10px var(--lavender-glow);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-box {
+            padding: 35px;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        /* Modal Base */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            padding: 40px;
+            max-width: 480px;
+            width: 90%;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            color: var(--lavender-main);
+        }
+
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid var(--navy-card-border);
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .tab-btn.active {
+            color: var(--lavender-light);
+            border-bottom: 2px solid var(--lavender-main);
+            text-shadow: 0 0 8px var(--lavender-glow);
+        }
+
+        /* Success Message Box */
+        .alert-success {
+            display: none;
+            background: rgba(132, 204, 22, 0.1);
+            border: 1px solid var(--olive-accent);
+            color: #d9f99d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* ==================== FOOTER ==================== */
+        footer {
+            margin-top: auto;
+            background: rgba(5, 11, 20, 0.9);
+            border-top: 1px solid var(--navy-card-border);
+            color: var(--text-muted);
+            padding: 30px 0;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ANIMATED NEURAL CANVAS BACKGROUND -->
+    <canvas id="neural-bg"></canvas>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo" onclick="navigateTo('home')"><i class="fa-solid fa-brain"></i> Bcool Lab</div>
+            <div class="nav-links">
+                <a id="nav-home" class="active-link" onclick="navigateTo('home')">Home</a>
+                <a id="nav-research" onclick="navigateTo('research')">Research</a>
+                <a id="nav-members" onclick="navigateTo('members')">Members</a>
+                <a id="nav-journal" onclick="navigateTo('journal')">Journal</a>
+                <a id="nav-ideas" onclick="navigateTo('ideas')">Ideas</a>
+                <a id="nav-apply" onclick="navigateTo('apply')">Apply</a>
+                <a id="nav-contact" onclick="navigateTo('contact')">Contact</a>
+                <button class="btn btn-outline" onclick="openAuthModal()">Sign In</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PAGE 1: HOME -->
+    <div id="page-home" class="page active">
+        <div class="container">
+            <header class="hero glass-card" style="padding: 60px 30px;">
+                <h1>Bcool Computational Neuroscience</h1>
+                <p>Unraveling mysterious neural circuits through computational mechanics, theoretical modeling, and artificial intelligence.</p>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button class="btn btn-primary" onclick="navigateTo('research')">Explore Research</button>
+                    <button class="btn btn-outline" onclick="navigateTo('apply')">Apply to Lab</button>
+                </div>
+            </header>
+        </div>
+    </div>
+
+    <!-- PAGE 2: RESEARCH CONCEPTS -->
+    <div id="page-research" class="page">
+        <div class="container">
+            <h2 class="section-title">Research Focus</h2>
+            <p class="section-subtitle">Bridging mathematical precision with mysterious brain functions.</p>
+            
+            <div class="grid-3">
+                <div class="card glass-card">
+                    <div class="card-icon"><i class="fa-solid fa-network-wired"></i></div>
+                    <h3>Neural Dynamics</h3>
+                    <p>Simulating spiking neural network populations to decipher how sensory information transforms into memory and motor commands.</p>
+                </div>
+                <div class="card glass-card">
+                    <div class="card-icon"><i class="fa-solid fa-microchip"></i></div>
+                    <h3>Neuromorphic Systems</h3>
+                    <p>Engineering brain-inspired algorithmic systems that translate biological energy efficiency into computational architectures.</p>
+                </div>
+                <div class="card glass-card">
+                    <div class="card-icon"><i class="fa-solid fa-diagram-project"></i></div>
+                    <h3>Cognitive Data Science</h3>
+                    <p>Deploying high-dimensional decoding models and probabilistic machine learning on complex electrophysiology datasets.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 3: MEMBERS & RESUMES -->
+    <div id="page-members" class="page">
+        <div class="container">
+            <h2 class="section-title">Lab Members & Resumes</h2>
+            <p class="section-subtitle">Meet the visionary scientists leading our computational endeavors.</p>
+            
+            <div class="team-grid">
+                <!-- Head Professor -->
+                <div class="team-card glass-card">
+                    <div class="team-header">
+                        <div class="team-avatar"><i class="fa-solid fa-user-tie"></i></div>
+                        <div class="team-info">
+                            <h3>Dr. Alex Mercer</h3>
+                            <div class="role">Head Professor / PI</div>
+                            <div class="tenure"><i class="fa-regular fa-calendar"></i> 2015 - Present (9 yrs)</div>
+                        </div>
+                    </div>
+                    <div class="team-body">
+                        <h4>Topics Worked On</h4>
+                        <div class="tag-list">
+                            <span class="tag">Theoretical Bio-Nets</span>
+                            <span class="tag">Synaptic Plasticity</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Leading bio-physical research modeling dynamic brain systems for over 15 years.</p>
+                        <a href="mailto:a.mercer@bcoollab.org" class="btn btn-outline" style="margin-top: 20px; width: 100%; text-align: center;"><i class="fa-regular fa-envelope"></i> Email Professor</a>
+                    </div>
+                </div>
+
+                <!-- Postdoc -->
+                <div class="team-card glass-card">
+                    <div class="team-header">
+                        <div class="team-avatar"><i class="fa-solid fa-user-gear"></i></div>
+                        <div class="team-info">
+                            <h3>Dr. Elena Rostova</h3>
+                            <div class="role">Senior Postdoc</div>
+                            <div class="tenure"><i class="fa-regular fa-calendar"></i> 2020 - Present (4 yrs)</div>
+                        </div>
+                    </div>
+                    <div class="team-body">
+                        <h4>Topics Worked On</h4>
+                        <div class="tag-list">
+                            <span class="tag">Deep Vision Nets</span>
+                            <span class="tag">fMRI Decoding</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Comparing deep convolutional visual streams against biological visual processing.</p>
+                        <a href="mailto:e.rostova@bcoollab.org" class="btn btn-outline" style="margin-top: 20px; width: 100%; text-align: center;"><i class="fa-regular fa-envelope"></i> Email Member</a>
+                    </div>
+                </div>
+
+                <!-- PhD Student -->
+                <div class="team-card glass-card">
+                    <div class="team-header">
+                        <div class="team-avatar"><i class="fa-solid fa-user-graduate"></i></div>
+                        <div class="team-info">
+                            <h3>Marcus Vance</h3>
+                            <div class="role">Ph.D. Researcher</div>
+                            <div class="tenure"><i class="fa-regular fa-calendar"></i> 2022 - Present (2 yrs)</div>
+                        </div>
+                    </div>
+                    <div class="team-body">
+                        <h4>Topics Worked On</h4>
+                        <div class="tag-list">
+                            <span class="tag">Spiking Nets</span>
+                            <span class="tag">Bio-Reinforcement</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Analyzing energetic efficiency parameters in bio-inspired event-based algorithms.</p>
+                        <a href="mailto:m.vance@bcoollab.org" class="btn btn-outline" style="margin-top: 20px; width: 100%; text-align: center;"><i class="fa-regular fa-envelope"></i> Email Member</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 4: JOURNAL -->
+    <div id="page-journal" class="page">
+        <div class="container">
+            <h2 class="section-title">Lab Journal</h2>
+            <p class="section-subtitle">Chronicles of projects and ongoing investigations in the lab.</p>
+
+            <div class="journal-container">
+                <div class="journal-post glass-card">
+                    <div class="journal-meta">
+                        <span><i class="fa-solid fa-folder"></i> Project #BC-2026-01</span>
+                        <span><i class="fa-regular fa-calendar"></i> Jan 2026</span>
+                    </div>
+                    <h3>Project Synapse: High-Fidelity Dendritic Processing</h3>
+                    <p>Exploring how local non-linear dendritic computations occur before somatic integration. Utilizing high-performance computer clusters, our team simulated multi-compartmental neurons to evaluate emergent signaling dynamics.</p>
+                </div>
+
+                <div class="journal-post glass-card">
+                    <div class="journal-meta">
+                        <span><i class="fa-solid fa-folder"></i> Project #BC-2025-04</span>
+                        <span><i class="fa-regular fa-calendar"></i> Nov 2025</span>
+                    </div>
+                    <h3>Attentional Gating in Spiking Architectures</h3>
+                    <p>Introduced a novel recurrent neural network framework incorporating bio-inspired oscillatory mechanisms. The system shows high noise tolerance during continuous sensory filtering.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 5: SUBMIT IDEAS -->
+    <div id="page-ideas" class="page">
+        <div class="container">
+            <h2 class="section-title">Submit Ideas</h2>
+            <p class="section-subtitle">Propose research concepts or computational hypotheses directly to our team.</p>
+            
+            <div class="form-box glass-card">
+                <form id="ideaForm" onsubmit="handleIdeaSubmit(event)">
+                    <div class="form-group">
+                        <label for="ideaName">Full Name</label>
+                        <input type="text" id="ideaName" class="form-control" required placeholder="Dr. Alex Vance">
+                    </div>
+                    <div class="form-group">
+                        <label for="ideaEmail">Email Address</label>
+                        <input type="email" id="ideaEmail" class="form-control" required placeholder="alex@domain.org">
+                    </div>
+                    <div class="form-group">
+                        <label for="ideaTitle">Proposal Title</label>
+                        <input type="text" id="ideaTitle" class="form-control" required placeholder="Spiking Neural Hypothesis">
+                    </div>
+                    <div class="form-group">
+                        <label for="ideaBody">Concept Details</label>
+                        <textarea id="ideaBody" class="form-control" required placeholder="Describe your computational hypothesis..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Proposal</button>
+                </form>
+                
+                <div id="ideaResponse" class="alert-success">
+                    <strong><i class="fa-solid fa-paper-plane"></i> Automated Confirmation Sent!</strong>
+                    <p style="margin-top: 5px;">Dear Participant, thank you for sharing your concept with the Bcool Lab. We deeply appreciate your intellectual contribution. Our research team will review your proposal and respond in due course.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 6: APPLY & INTERVIEW -->
+    <div id="page-apply" class="page">
+        <div class="container">
+            <h2 class="section-title">Apply & Schedule Interview</h2>
+            <p class="section-subtitle">Join our team or schedule an evaluation slot with lab members.</p>
+            
+            <div class="form-box glass-card">
+                <form id="applyForm" onsubmit="handleApplySubmit(event)">
+                    <div class="form-group">
+                        <label for="applicantName">Full Name</label>
+                        <input type="text" id="applicantName" class="form-control" required placeholder="Your Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="applicantEmail">Email Address</label>
+                        <input type="email" id="applicantEmail" class="form-control" required placeholder="email@university.edu">
+                    </div>
+                    <div class="form-group">
+                        <label for="interviewTarget">Select Interviewer</label>
+                        <select id="interviewTarget" class="form-control" required>
+                            <option value="">-- Select Member --</option>
+                            <option value="mercer">Dr. Alex Mercer (Head Professor)</option>
+                            <option value="rostova">Dr. Elena Rostova (Senior Postdoc)</option>
+                            <option value="vance">Marcus Vance (PhD Researcher)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="interviewDate">Preferred Date & Time</label>
+                        <input type="datetime-local" id="interviewDate" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Reserve Slot</button>
+                </form>
+
+                <div id="applyResponse" class="alert-success">
+                    <strong><i class="fa-solid fa-circle-check"></i> Reservation Sent!</strong>
+                    <p style="margin-top: 5px;">Your interview request has been logged. An email invitation has been dispatched to your email address.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 7: CONTACT & SOCIALS -->
+    <div id="page-contact" class="page">
+        <div class="container">
+            <h2 class="section-title">Get in Touch</h2>
+            <p class="section-subtitle">Connect with Bcool Lab across email and social networks.</p>
+
+            <div class="contact-card glass-card">
+                <p style="font-size: 1.1rem; color: var(--lavender-light);">
+                    <i class="fa-solid fa-location-dot" style="color: var(--lavender-main);"></i> 
+                    Department of Computational Neuroscience, Building B
+                </p>
+
+                <div class="social-grid">
+                    <a href="mailto:contact@bcoollab.org" class="social-link email">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span>Email</span>
+                    </a>
+                    <a href="https://youtube.com" target="_blank" class="social-link youtube">
+                        <i class="fa-brands fa-youtube"></i>
+                        <span>YouTube</span>
+                    </a>
+                    <a href="https://linkedin.com" target="_blank" class="social-link linkedin">
+                        <i class="fa-brands fa-linkedin-in"></i>
+                        <span>LinkedIn</span>
+                    </a>
+                    <a href="https://instagram.com" target="_blank" class="social-link instagram">
+                        <i class="fa-brands fa-instagram"></i>
+                        <span>Instagram</span>
+                    </a>
+                    <a href="https://telegram.org" target="_blank" class="social-link telegram">
+                        <i class="fa-brands fa-telegram"></i>
+                        <span>Telegram</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTHENTICATION MODAL -->
+    <div class="modal" id="authModal">
+        <div class="modal-content glass-card">
+            <span class="close-modal" onclick="closeAuthModal()">&times;</span>
+            
+            <div class="tab-buttons">
+                <button class="tab-btn active" id="tabSignInBtn" onclick="switchTab('signin')">Sign In</button>
+                <button class="tab-btn" id="tabSignUpBtn" onclick="switchTab('signup')">Sign Up</button>
+            </div>
+
+            <form id="signInForm" onsubmit="handleAuth(event, 'Sign In')">
+                <div class="form-group">
+                    <label for="signInEmail">Email</label>
+                    <input type="email" id="signInEmail" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="signInPassword">Password</label>
+                    <input type="password" id="signInPassword" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+            </form>
+
+            <form id="signUpForm" onsubmit="handleAuth(event, 'Sign Up')" style="display: none;">
+                <div class="form-group">
+                    <label for="signUpName">Full Name</label>
+                    <input type="text" id="signUpName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="signUpEmail">Email</label>
+                    <input type="email" id="signUpEmail" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="signUpPassword">Password</label>
+                    <input type="password" id="signUpPassword" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Bcool Computational Neuroscience Lab. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT & SPA ROUTING -->
+    <script>
+        /* Multi-Page Navigation Handler */
+        function navigateTo(pageId) {
+            // Hide all pages
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+
+            // Show selected page
+            const targetPage = document.getElementById(`page-${pageId}`);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+
+            // Update Navbar active styles
+            const navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(link => link.classList.remove('active-link'));
+            
+            const activeNav = document.getElementById(`nav-${pageId}`);
+            if (activeNav) {
+                activeNav.classList.add('active-link');
+            }
+
+            // Scroll to top on page switch
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /* Interactive Background - Neural Dynamic Canvas */
+        const canvas = document.getElementById('neural-bg');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const nodes = [];
+        const numNodes = 65;
+
+        for (let i = 0; i < numNodes; i++) {
+            nodes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 2 + 1,
+                vx: (Math.random() - 0.5) * 0.8,
+                vy: (Math.random() - 0.5) * 0.8,
+                color: Math.random() > 0.4 ? '#c084fc' : '#84cc16'
+            });
+        }
+
+        function drawNeuralNet() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Connections
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[i].x - nodes[j].x;
+                    const dy = nodes[i].y - nodes[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.strokeStyle = `rgba(167, 139, 250, ${1 - dist / 150 * 0.85})`;
+                        ctx.lineWidth = 0.6;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw Nodes & Update Motion
+            for (let node of nodes) {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                ctx.fillStyle = node.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = node.color;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                node.x += node.vx;
+                node.y += node.vy;
+
+                if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
+                if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
+            }
+
+            requestAnimationFrame(drawNeuralNet);
+        }
+
+        drawNeuralNet();
+
+        /* Modal Handlers */
+        function openAuthModal() {
+            document.getElementById('authModal').style.display = 'flex';
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+        }
+
+        function switchTab(tab) {
+            const signInForm = document.getElementById('signInForm');
+            const signUpForm = document.getElementById('signUpForm');
+            const tabSignInBtn = document.getElementById('tabSignInBtn');
+            const tabSignUpBtn = document.getElementById('tabSignUpBtn');
+
+            if (tab === 'signin') {
+                signInForm.style.display = 'block';
+                signUpForm.style.display = 'none';
+                tabSignInBtn.classList.add('active');
+                tabSignUpBtn.classList.remove('active');
+            } else {
+                signInForm.style.display = 'none';
+                signUpForm.style.display = 'block';
+                tabSignUpBtn.classList.add('active');
+                tabSignInBtn.classList.remove('active');
+            }
+        }
+
+        function handleAuth(event, type) {
+            event.preventDefault();
+            alert(`${type} successful! Welcome to Bcool Lab.`);
+            closeAuthModal();
+        }
+
+        function handleIdeaSubmit(event) {
+            event.preventDefault();
+            document.getElementById('ideaResponse').style.display = 'block';
+            document.getElementById('ideaForm').reset();
+        }
+
+        function handleApplySubmit(event) {
+            event.preventDefault();
+            document.getElementById('applyResponse').style.display = 'block';
+            document.getElementById('applyForm').reset();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('authModal');
+            if (event.target === modal) {
+                closeAuthModal();
+            }
+        }
+    </script>
+</body>
+</html>
